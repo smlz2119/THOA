@@ -1,0 +1,175 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">角色管理</h3>
+
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="角色名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+                                <i class="fa fa-search"></i>
+							</button>
+							<button type="button" class="btn btn-default btn-add">添加</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<form>
+				  <table class="table table-hover">
+					<thead>
+						<tr>
+							<th>角色名称</th>
+							<th>备注</th>
+							<th>创建时间</th>
+							<th>修改时间</th>
+							<th>创建用户</th>
+							<th>修改用户</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId">
+					</tbody>
+				  </table>
+				</form>
+			</div>
+			<!-- /.box-body -->
+			<div id="pageId" class="box-footer clearfix">
+            </div>
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	$("#pageId").load("doPageUI.do", function(){
+		$(".input-group-btn").on("click", ".btn-search", doQueryObjects)
+		.on("click", ".btn-add", doLoadEditUI);
+		$("#tbodyId").on("click", ".btn-update", doLoadEditUI)
+		.on("click", ".btn-delete", doDeleteObject);
+		doGetObjects();
+	});
+});
+
+function doGetObjects(){
+	var url = "role/doFindPageObjects.do";
+	var pageCurrent = $("#pageId").data("pageCurrent");
+	if(!pageCurrent) pageCurrent = 1;
+	var params = {"pageCurrent":pageCurrent};
+	var name = $("#searchNameId").val();
+	if(name) params.name = name;
+	$.getJSON(url, params, function(result){
+		doHandleResponseResult(result);
+	});
+}
+
+function doHandleResponseResult(result) {
+	if(result.state==1) {
+		doSetTableBodyRows(result.data.records);
+		doSetPagination(result.data);
+	}else {
+		doSetTableBodyErrors(result.message);
+	}
+}
+
+function doSetTableBodyRows(records) {
+	//1 获取tbody对象,并清掉对象
+	var tBody = $("#tbodyId");
+	tBody.empty();
+	//2 迭代records对象，并将其写入table之中
+	for(var i in records) {
+		var tr = $("<tr></tr>");
+		tr.data("id", records[i].id);
+		var tds = doCreatedTds(records[i]);
+		tr.append(tds);
+		tBody.append(tr);
+	}
+}
+
+function doCreatedTds(row){
+	var tds = "<td>" + row.name + "</td>" +
+	"<td>" + row.note + "</td>" +
+	"<td>" + new Date(row.createdTime).toLocaleString() + "</td>" +
+	"<td>" + new Date(row.modifiedTime).toLocaleString() + "</td>" +
+	"<td>" + row.createdUser + "</td>" +
+	"<td>" + row.modifiedUser + "</td>" +
+	"<td><a class='btn-delete'>delete</a>&nbsp;<a class='btn-update'>update</a></td>";
+	return tds;
+}
+
+function doSetTableBodyErrors(message) {
+	var tBody = $("#tbodyId");
+	tBody.empty();
+	//1 创建tr对象
+	var tr = $("<tr></tr>");
+	// 2创建td对象
+	var len = $("table th").length;
+	var td = $("<td></td>");
+	td.prop("colspan", len);
+	td.append(message);
+	tr.append(td);
+	tBody.append(tr);
+}
+
+function doQueryObjects() {
+	$("#pageId").data("pageCurrent", 1);
+	doGetObjects();
+}
+
+function doLoadEditUI() {
+	var title;
+	if($(this).hasClass("btn-add")) {
+		title = "角色添加";
+		doLoadPageUI(title);
+	}else {
+		title = "角色修改";
+		var id = $(this).parents("tr").data("id");
+		var url = "role/doFindObjectById.do";
+		var params = {id:id};
+		$.getJSON(url, params, function(result){
+			if(result.state==1) {
+				$("#mainContentId").data("data", result.data);
+				doLoadPageUI(title);
+			}else {
+				alert(result.message);
+			}
+		});	
+	}
+		
+}
+
+function doLoadPageUI(title) {
+	$("#mainContentId").load("role/doRoleEditUI.do", function() {
+		$(".box-title").html(title);
+	});
+}
+
+function doDeleteObject() {
+	var id = $(this).parents("tr").data("id");
+	var params = {id:id};
+	var url = "role/doDeleteObjects.do";
+	$.post(url, params, function(result) {
+		alert(result.message);
+		if(result.state==1) {
+			doGetObjects();
+		}
+	}, "json")
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
+

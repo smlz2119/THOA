@@ -1,0 +1,135 @@
+<!-- Horizontal Form -->
+ <div class="box box-info">
+      <div class="box-header with-border">
+        <h3 class="box-title">添加角色</h3>
+      </div>
+      <!-- /.box-header -->
+      <!-- form start -->
+      <form class="form-horizontal">
+        <div class="box-body">
+          <div class="form-group">
+            <label for="nameId" class="col-sm-2 control-label">名称</label>
+
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="nameId" placeholder="名称">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="noteId" class="col-sm-2 control-label">描述</label>
+
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="note" id="noteId" placeholder="描述">
+            </div>
+          </div>
+          <div class="form-group">
+				<label class="col-sm-2 control-label">授权</label>
+				<div class="col-sm-10">
+						<ul id="menuTree" class="ztree"></ul>
+				</div>
+		  </div>
+        </div>
+        <!-- /.box-body -->
+        <div class="box-footer">
+          <button type="button" class="btn btn-default btn-cancel">Cancel</button>
+          <button type="button" class="btn btn-info pull-right btn-save">Save</button>
+        </div>
+        <!-- /.box-footer -->
+      </form>
+    </div>
+    <script type="text/javascript" src="bower_components/ztree/jquery.ztree.all.min.js"></script>
+    <script type="text/javascript">
+    var zTree; 
+    var setting = {
+   	data : {
+   	    simpleData : {
+   			enable : true,
+   			idKey : "id",  //节点数据中保存唯一标识的属性名称
+   			pIdKey : "parentId",  //节点数据中保存其父节点唯一标识的属性名称
+   			rootPId : null  //根节点id
+   		}
+   	},
+   	check:{
+   		enable:true,
+   		nocheckInherit:true
+   	}//此配置提供复选框操作(可查官方zTree)
+    }
+    $(function(){
+    	//异步加载菜单信息,初始化页面菜单
+    	doLoadSysMenus();
+    	$(".box-footer")
+    	.on("click",".btn-save",doSaveOrUpdate)
+    	.on("click",".btn-cancel",doCancel);	
+    });
+    
+    function doLoadSysMenus(){
+    	var url = "menu/doFindZtreeMenuNodes.do";
+    	$.getJSON(url, function(result) {
+    		if(result.state==1) {
+    			zTree = $.fn.zTree.init($("#menuTree"), setting, result.data);
+    			var data = $("#mainContentId").data("data");
+    			if(data) doInitEditFormData(data);
+    		}else {
+    			alert(result.message);
+    		}
+    	});
+    }
+    
+   function doSaveOrUpdate() {
+    	var params = doGetEditFormData();
+    	var insertUrl = "role/doSaveObject.do";
+    	var updateUrl = "role/doUpdateObject.do";
+    	var data = $("#mainContentId").data("data");
+    	if(data) params.id = data.role.id;
+    	var url = data?updateUrl:insertUrl;
+    	$.post(url, params, function(result) {
+    		alert(result.message);
+    		if(result.state==1) {
+    			doCancel();
+    		}
+    	},"json");
+    }
+   
+   function doCancel() {
+	   $("#mainContentId").load("role/doRoleListUI.do", function() {
+		   $("#mainContentId").removeData();
+	   });
+    }
+   
+   function doGetEditFormData() {
+	   var params = {
+			   name:$("#nameId").val(),
+			   note:$("#noteId").val()
+	   };
+	   var menuIds=[];
+	   var checkedNodes = zTree.getCheckedNodes(true);
+	   for(var i in checkedNodes) {
+		   menuIds.push(checkedNodes[i].id);
+	   }
+	   params.menuIds = menuIds.toString();
+	   return params;
+   }
+   
+   function doInitEditFormData(data) {
+	   $("#nameId").val(data.role.name);
+	   $("#noteId").val(data.role.note);
+	   //展开所有节点
+	   zTree.expandAll(true);
+	   var menuIds = data.menuIds;
+	   //勾选角色所拥有的菜单
+	   for(var i=0; i<menuIds.length; i++) {
+		   //获取key为id值为menuIds[i]的节点
+		   var node = zTree.getNodeByParam("id", menuIds[i]);
+		   //选中当前节点
+		   zTree.checkNode(node, true, false);	   
+	   }
+   }
+    
+</script>
+    
+    
+    
+    
+    
+    
+    
+    

@@ -1,0 +1,89 @@
+<!-- Horizontal Form -->
+ <div class="box box-info">
+      <!-- form start -->
+      <form class="form-horizontal">
+        <div class="box-body">
+          <div class="form-group">
+            <label for="nameId" class="col-sm-2 control-label">参数名</label>
+
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="nameId" placeholder="名称">
+            </div>
+          </div>
+           <div class="form-group">
+            <label for="valueId" class="col-sm-2 control-label">参数值</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="valueId" placeholder="名称">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="noteId" class="col-sm-2 control-label">描述</label>
+
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="note" id="noteId" placeholder="描述">
+            </div>
+          </div>
+        </div>
+        <!-- /.box-body -->
+      </form>
+    </div>
+ <script type="text/javascript">
+ $(function(){
+	 $("#myModal").on("click", ".btn-save", doSaveOrUpdate);
+	 
+	 //注册模态框的隐藏监听事件
+	 $("#myModal").on("hidden.bs.modal", function(e){
+		 //移除myModal上的绑定事件, 如果不移除有可能出现表单的重复提交
+		 $("#myModal").off();
+		 $("#myModal").removeData();
+	 });
+	 
+	 //获取模态框上绑定的数据
+	 var rowData = $("#myModal").data("rowData");
+	 if(rowData){
+		 doInitEditFormData(rowData);
+	 }	 
+ })
+ 
+ function doSaveOrUpdate() {
+	 //1 获取表单数据
+	 var params = doGetFormData();
+	 var rowData = $("#myModal").data("rowData");
+	 if(rowData)
+		 params.id = rowData.id;
+	 //2 定义url
+	 var insertUrl = "config/doSaveObject.do";
+	 var updateUrl = "config/doUpdateObject.do";
+	 var url = rowData?updateUrl:insertUrl;
+	 $.post(url, params, function(result){
+		 alert(result.message);
+		 if(result.state==1) {
+			 $("#myModal").modal("hide");
+			 doGetObjects();
+		 }
+	 });
+ }
+ 
+ function doGetFormData(){
+	 var params = {
+			 "name":$("#nameId").val(),
+			 "value":$("#valueId").val(),
+			 "note":$("#noteId").val()
+	 };
+	 return params;
+ }
+ 
+ function doInitEditFormData(rowData) {
+	 $("#nameId").val(rowData.name);
+	 $("#valueId").val(rowData.value);
+	 $("#noteId").val(rowData.note);
+ }
+ </script>
+    
+    
+    
+    
+    
+    
+    
+    
